@@ -110,6 +110,45 @@ router.get('/', verifyUser, async (req, res) => {
   }
 });
 
+router.patch('/:bookingId/cancel', verifyUser, async (req, res) => {
+  const userId = req.user.user.id;
+  const { bookingId } = req.params;  // Get the booking ID from the URL parameter
+
+  try {
+    // Check if the booking exists and belongs to the authenticated user
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('id', bookingId)  // Ensure the booking belongs to the authenticated user
+      .single();  // Only expect one result
+
+    if (fetchError || !booking) {
+      return res.status(404).json({ message: 'Booking not found or does not belong to the authenticated user' });
+    }
+
+    // Update the booking status to "cancelled"
+    const { data: updatedBooking, error: updateError } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })  // Update the status to 'cancelled'
+      .eq('id', bookingId)  // Identify the booking by its ID
+      .eq('user_id', userId)  // Ensure it belongs to the authenticated user
+      .single().select();  // Return only a single updated record
+
+    if (updateError) {
+      console.error("Error updating booking:", updateError);
+      return res.status(500).json({ message: 'Error updating booking status', error: updateError.message });
+    }
+
+    // Return the updated booking data
+    res.status(200).json({ booking: updatedBooking });
+  } catch (error) {
+    console.error("Server Error:", error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+
 router.get('/:booking_id', async (req, res) => {
 
   const { booking_id } = req.params;
