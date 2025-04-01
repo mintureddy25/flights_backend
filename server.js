@@ -9,7 +9,7 @@ const port = 3000;
 app.use(express.json());
 
 app.use(cors({
-    origin: 'http://localhost:8080',  // Allow requests from a specific domain
+    origin: process.env.CLIENT_URL,  // Allow requests from a specific domain
     methods: ['GET', 'POST'],                 // Specify allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'],  // Specify allowed headers
   }));
